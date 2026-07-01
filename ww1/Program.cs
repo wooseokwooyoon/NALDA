@@ -19,9 +19,7 @@ namespace AssaultCubeTrainer
 
     public class MainForm : Form
     {
-        // =========================================================
-        //  Windows API (P/Invoke) - 다른 프로세스 메모리에 접근하는 함수들
-        // =========================================================
+        
         [DllImport("kernel32.dll")]
         static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
@@ -38,25 +36,21 @@ namespace AssaultCubeTrainer
 
         const uint PROCESS_ALL_ACCESS = 0x1F0FFF;
 
-        // =========================================================
-        //  게임 / 포인터 정보  (치트엔진에서 찾은 값 그대로)
-        // =========================================================
-        const string ProcessName = "ac_client";   // ac_client.exe  (".exe"는 빼고 적음)
-        const int BaseOffset = 0x0018009C;         // "ac_client.exe" + 0x0018009C  (정적 베이스)
+   
+        const string ProcessName = "ac_client";   
+        const int BaseOffset = 0x0018009C;         
 
-        // 체력:  [[ac_client.exe+0018009C] + EC]
+        
         static readonly int[] HealthOffsets = { 0xEC };
 
-        // 탄약:  [[[[ac_client.exe+0018009C] + 36C] + 14] + 0]
+        
         static readonly int[] AmmoOffsets = { 0x36C, 0x14, 0x0 };
 
         // 버튼 누르면 채워줄 값
         const int HealthValue = 5000;
         const int AmmoValue = 300;
 
-        // =========================================================
-        //  UI 구성 요소
-        // =========================================================
+        
         Button btnHealth;
         Button btnAmmo;
         Label lblStatus;
@@ -99,19 +93,15 @@ namespace AssaultCubeTrainer
             Controls.Add(lblStatus);
         }
 
-        // =========================================================
-        //  포인터 체인 해석
-        //  baseAddr 위치에 들어있는 값을 읽고, 마지막 오프셋 전까지는
-        //  계속 역참조(ReadInt32)한 뒤, 마지막 오프셋은 더하기만 한다.
-        // =========================================================
+        
         IntPtr ResolvePointer(IntPtr handle, IntPtr baseAddr, int[] offsets)
         {
-            long addr = ReadInt32(handle, baseAddr);          // 1단계: 베이스가 가리키는 주소
+            long addr = ReadInt32(handle, baseAddr);          
             for (int i = 0; i < offsets.Length - 1; i++)
             {
-                addr = ReadInt32(handle, (IntPtr)(addr + offsets[i]));  // 중간 오프셋은 역참조
+                addr = ReadInt32(handle, (IntPtr)(addr + offsets[i]));  
             }
-            return (IntPtr)(addr + offsets[offsets.Length - 1]);        // 마지막 오프셋은 더하기만
+            return (IntPtr)(addr + offsets[offsets.Length - 1]);        
         }
 
         int ReadInt32(IntPtr handle, IntPtr addr)
@@ -127,9 +117,7 @@ namespace AssaultCubeTrainer
             WriteProcessMemory(handle, addr, buf, 4, out _);
         }
 
-        // =========================================================
-        //  실제 동작: 프로세스 찾기 → 핸들 열기 → 주소 계산 → 값 쓰기
-        // =========================================================
+       
         void SetValue(int[] offsets, int value, string name)
         {
             Process[] procs = Process.GetProcessesByName(ProcessName);
@@ -149,7 +137,7 @@ namespace AssaultCubeTrainer
 
             try
             {
-                // ac_client.exe 모듈의 시작 주소 + 정적 오프셋 = 정적 베이스
+               
                 long moduleBase = game.MainModule.BaseAddress.ToInt64();
                 IntPtr baseAddr = (IntPtr)(moduleBase + BaseOffset);
 
